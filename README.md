@@ -4,6 +4,8 @@
 
 [Black](https://github.com/psf/black) is for Python. [gofmt](https://go.dev/blog/gofmt) is for Go. **behave-format** is for Gherkin.
 
+**Documentation:** [https://mathiaspaulenko.github.io/behave-format/](https://mathiaspaulenko.github.io/behave-format/)
+
 ---
 
 ## Overview
