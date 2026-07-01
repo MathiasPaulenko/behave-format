@@ -1,0 +1,80 @@
+site_name: behave-format
+site_description: The opinionated formatter for Behave .feature files
+site_url: https://mathiaspaulenko.github.io/behave-format/
+repo_url: https://github.com/MathiasPaulenko/behave-format
+repo_name: MathiasPaulenko/behave-format
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: JetBrains Mono
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick_start.md
+  - Guides:
+      - Formatting Rules: guides/formatting_rules.md
+      - Configuration: guides/configuration.md
+      - CLI Usage: guides/cli_usage.md
+      - Pipeline: guides/pipeline.md
+      - Python API: guides/python_api.md
+  - API Reference:
+      - Overview: api/overview.md
+      - Settings: api/settings.md
+      - Formatter: api/formatter.md
+      - Printers: api/printers.md
+      - Pipeline: api/pipeline.md
+  - Architecture: architecture.md
+  - Design Decisions: design_decisions.md
+  - Examples: examples.md
+  - Changelog: changelog.md
+  - Contributing: contributing.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/MathiasPaulenko/behave-format
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/behave-format/
