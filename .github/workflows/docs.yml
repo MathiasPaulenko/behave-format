@@ -46,6 +46,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    continue-on-error: true
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
