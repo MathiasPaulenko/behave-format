@@ -13,7 +13,7 @@ from behave_model.model.feature import Feature
 from behave_model.model.project import Project
 
 from behave_format.config.settings import Settings
-from behave_format.pipeline.align import align_project
+from behave_format.pipeline.align import align_feature, align_project
 from behave_format.pipeline.normalize import normalize_project
 from behave_format.pipeline.sort import sort_project
 from behave_format.printer.feature_printer import print_feature
@@ -60,7 +60,7 @@ def format_feature(feature: Feature, settings: Settings | None = None) -> Featur
     _normalize_feature(feature)
     if settings.sort_tags:
         _sort_feature_tags(feature)
-    # align is handled at print time
+    align_feature(feature)
     return feature
 
 

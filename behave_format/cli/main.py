@@ -20,6 +20,7 @@ from pathlib import Path
 
 from behave_model import load_feature
 
+from behave_format import __version__
 from behave_format.config.settings import Settings
 from behave_format.pipeline.formatter import format_feature
 from behave_format.printer.feature_printer import print_feature
@@ -45,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     needs_formatting = False
+    had_errors = False
 
     for path in paths:
         if path.is_dir():
@@ -54,13 +56,23 @@ def main(argv: list[str] | None = None) -> int:
             if changed:
                 needs_formatting = True
         elif path.is_file() and path.suffix == ".feature":
-            changed = _process_file(
-                path, settings, check=args.check, diff=args.diff, quiet=args.quiet
-            )
-            if changed:
-                needs_formatting = True
+            try:
+                changed = _process_file(
+                    path, settings, check=args.check, diff=args.diff, quiet=args.quiet
+                )
+                if changed:
+                    needs_formatting = True
+            except Exception as e:
+                print(f"Error: {path}: {e}", file=sys.stderr)
+                had_errors = True
+        elif not path.exists():
+            print(f"Error: {path}: file not found", file=sys.stderr)
+            had_errors = True
         else:
             print(f"Warning: skipping {path} (not a .feature file or directory)", file=sys.stderr)
+
+    if had_errors:
+        return 2
 
     if args.check and needs_formatting:
         if not args.quiet:
@@ -80,6 +92,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="behave-format",
         description="The opinionated formatter for Behave .feature files.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     parser.add_argument(
         "paths",
@@ -126,8 +143,11 @@ def _process_directory(
     feature_files = sorted(directory.rglob("*.feature"))
     changed = False
     for fpath in feature_files:
-        if _process_file(fpath, settings, check=check, diff=diff, quiet=quiet):
-            changed = True
+        try:
+            if _process_file(fpath, settings, check=check, diff=diff, quiet=quiet):
+                changed = True
+        except Exception as e:
+            print(f"Error: {fpath}: {e}", file=sys.stderr)
     return changed
 
 

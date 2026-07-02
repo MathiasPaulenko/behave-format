@@ -45,6 +45,9 @@ def print_scenario(scenario: Scenario, indent: int = 2) -> str:
     prefix = " " * indent
     lines: list[str] = []
 
+    for comment in scenario.comments:
+        lines.append(f"{prefix}{comment.text}")
+
     if scenario.tags:
         lines.append(print_tags(scenario.tags, indent=indent))
 
@@ -76,6 +79,9 @@ def print_scenario_outline(outline: ScenarioOutline, indent: int = 2) -> str:
     """
     prefix = " " * indent
     lines: list[str] = []
+
+    for comment in outline.comments:
+        lines.append(f"{prefix}{comment.text}")
 
     if outline.tags:
         lines.append(print_tags(outline.tags, indent=indent))

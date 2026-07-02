@@ -26,6 +26,12 @@ def print_feature(feature: Feature, indent: int = 2) -> str:
     """
     lines: list[str] = []
 
+    if feature.language and feature.language != "en":
+        lines.append(f"# language: {feature.language}")
+
+    for comment in feature.comments:
+        lines.append(comment.text)
+
     if feature.tags:
         lines.append(print_tags(feature.tags, indent=0))
 
@@ -60,6 +66,9 @@ def print_feature(feature: Feature, indent: int = 2) -> str:
 def _print_rule(rule: Rule, indent: int = 2) -> str:
     prefix = " " * indent
     lines: list[str] = []
+
+    for comment in rule.comments:
+        lines.append(f"{prefix}{comment.text}")
 
     if rule.tags:
         lines.append(print_tags(rule.tags, indent=indent))

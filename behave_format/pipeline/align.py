@@ -28,6 +28,19 @@ def align_project(project: Project) -> Project:
     return project
 
 
+def align_feature(feature: Feature) -> Feature:
+    """Apply alignment rules to a single feature.
+
+    Args:
+        feature: The feature to align (mutated in place).
+
+    Returns:
+        The same feature, aligned.
+    """
+    _align_feature(feature)
+    return feature
+
+
 def _align_feature(feature: Feature) -> None:
     if feature.background:
         for step in feature.background.steps:
@@ -37,7 +50,7 @@ def _align_feature(feature: Feature) -> None:
             _align_step(step)
         if isinstance(scenario, ScenarioOutline):
             for ex in scenario.examples:
-                _align_table(examples_table=ex.table)
+                _align_table(ex.table)
     for rule in feature.rules:
         if rule.background:
             for step in rule.background.steps:
@@ -47,7 +60,7 @@ def _align_feature(feature: Feature) -> None:
                 _align_step(step)
             if isinstance(scenario, ScenarioOutline):
                 for ex in scenario.examples:
-                    _align_table(examples_table=ex.table)
+                    _align_table(ex.table)
 
 
 def _align_step(step: Step) -> None:
@@ -55,9 +68,8 @@ def _align_step(step: Step) -> None:
         _align_table(step.data_table)
 
 
-def _align_table(table: Table, *, examples_table: Table | None = None) -> None:
-    target = examples_table if examples_table is not None else table
-    _ensure_rectangular(target)
+def _align_table(table: Table) -> None:
+    _ensure_rectangular(table)
 
 
 def _ensure_rectangular(table: Table) -> None:

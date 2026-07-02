@@ -111,3 +111,31 @@ def test_cli_idempotent_write(temp_feature_file: Path) -> None:
     main([str(temp_feature_file)])
     second = temp_feature_file.read_text(encoding="utf-8")
     assert first == second
+
+
+def test_cli_version_flag(capsys: pytest.CaptureFixture) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--version"])
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "behave-format" in captured.out
+    assert "1.0.0" in captured.out
+
+
+def test_cli_nonexistent_file_returns_2(capsys: pytest.CaptureFixture) -> None:
+    exit_code = main(["nonexistent.feature"])
+    assert exit_code == 2
+    captured = capsys.readouterr()
+    assert "not found" in captured.err.lower()
+
+
+def test_cli_nonexistent_file_in_directory_does_not_crash(tmp_path: Path) -> None:
+    features_dir = tmp_path / "features"
+    features_dir.mkdir()
+    feature_file = features_dir / "test.feature"
+    feature_file.write_text(UNFORMATTED_INPUT, encoding="utf-8")
+
+    exit_code = main([str(features_dir)])
+    assert exit_code == 0
+    content = feature_file.read_text(encoding="utf-8")
+    assert content == FORMATTED_OUTPUT

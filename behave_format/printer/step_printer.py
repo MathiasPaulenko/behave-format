@@ -19,7 +19,12 @@ def print_step(step: Step, indent: int = 4) -> str:
         Multi-line string with the step and any attached docstring or table.
     """
     prefix = " " * indent
-    lines: list[str] = [f"{prefix}{step.keyword} {step.name}".rstrip()]
+    lines: list[str] = []
+
+    for comment in step.comments:
+        lines.append(f"{prefix}{comment.text}")
+
+    lines.append(f"{prefix}{step.keyword} {step.name}".rstrip())
 
     if step.doc_string:
         lines.append(_print_doc_string(step.doc_string, indent))
