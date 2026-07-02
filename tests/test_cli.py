@@ -119,7 +119,7 @@ def test_cli_version_flag(capsys: pytest.CaptureFixture) -> None:
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
     assert "behave-format" in captured.out
-    assert "1.0.0" in captured.out
+    assert "1.0.1" in captured.out
 
 
 def test_cli_nonexistent_file_returns_2(capsys: pytest.CaptureFixture) -> None:
