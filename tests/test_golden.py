@@ -28,7 +28,7 @@ def test_golden_file(input_name: str, expected_name: str) -> None:
 
     feature = load_feature(input_path)
     settings = Settings()
-    output = render_feature(feature, settings) + "\n"
+    output = render_feature(feature, settings)
     expected = expected_path.read_text(encoding="utf-8")
 
     assert output == expected, (

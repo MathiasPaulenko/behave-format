@@ -75,7 +75,7 @@ def render_feature(feature: Feature, settings: Settings | None = None) -> str:
         The formatted .feature file content as a string.
     """
     format_feature(feature, settings)
-    return print_feature(feature, indent=settings.indent if settings else 2)
+    return print_feature(feature, indent=settings.indent if settings else 2) + "\n"
 
 
 def render_project(project: Project, settings: Settings | None = None) -> str:
@@ -93,4 +93,4 @@ def render_project(project: Project, settings: Settings | None = None) -> str:
     format_project(project, settings)
     indent = settings.indent if settings else 2
     parts = [print_feature(f, indent=indent) for f in project.features]
-    return "\n\n".join(parts)
+    return "\n\n".join(parts) + "\n"

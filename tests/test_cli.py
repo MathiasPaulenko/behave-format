@@ -139,3 +139,40 @@ def test_cli_nonexistent_file_in_directory_does_not_crash(tmp_path: Path) -> Non
     assert exit_code == 0
     content = feature_file.read_text(encoding="utf-8")
     assert content == FORMATTED_OUTPUT
+
+
+def test_cli_indent_override(temp_feature_file: Path) -> None:
+    exit_code = main(["--indent", "4", str(temp_feature_file)])
+    assert exit_code == 0
+    content = temp_feature_file.read_text(encoding="utf-8")
+    assert "    Given a database connection" in content
+
+
+def test_cli_stdin_mode(capsys: pytest.CaptureFixture, monkeypatch: pytest.MonkeyPatch) -> None:
+    import io
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(UNFORMATTED_INPUT))
+    exit_code = main(["--stdin"])
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "@auth @smoke" in captured.out
+
+
+def test_cli_stdin_check_clean(
+    capsys: pytest.CaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import io
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(FORMATTED_OUTPUT))
+    exit_code = main(["--stdin", "--check"])
+    assert exit_code == 0
+
+
+def test_cli_stdin_check_dirty(
+    capsys: pytest.CaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import io
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(UNFORMATTED_INPUT))
+    exit_code = main(["--stdin", "--check", "--quiet"])
+    assert exit_code == 1

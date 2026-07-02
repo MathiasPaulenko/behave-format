@@ -95,6 +95,14 @@ def test_settings_immutable() -> None:
         pass
 
 
+def test_settings_with_indent() -> None:
+    settings = Settings(indent=2)
+    new_settings = settings.with_indent(4)
+    assert settings.indent == 2
+    assert new_settings.indent == 4
+    assert new_settings.sort_tags == settings.sort_tags
+
+
 def test_feature_comments_preserved() -> None:
     feature = Feature(
         name="Login",

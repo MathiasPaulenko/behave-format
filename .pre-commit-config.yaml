@@ -5,3 +5,12 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: behave-format
+        name: behave-format
+        entry: behave-format
+        language: system
+        files: \.feature$
+        pass_filenames: true

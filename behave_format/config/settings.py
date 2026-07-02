@@ -6,7 +6,7 @@ or constructed programmatically.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 try:
     import tomllib
@@ -79,3 +79,14 @@ class Settings:
             sort_scenarios=data.get("sort_scenarios", False),
             line_length=data.get("line_length", 120),
         )
+
+    def with_indent(self, indent: int) -> Settings:
+        """Return a new Settings with the given indent.
+
+        Args:
+            indent: Number of spaces for indentation.
+
+        Returns:
+            A new Settings instance with the updated indent.
+        """
+        return replace(self, indent=indent)

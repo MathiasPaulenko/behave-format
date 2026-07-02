@@ -1,5 +1,11 @@
 # behave-format
 
+[![CI](https://github.com/MathiasPaulenko/behave-format/actions/workflows/ci.yml/badge.svg)](https://github.com/MathiasPaulenko/behave-format/actions/workflows/ci.yml)
+[![Docs](https://github.com/MathiasPaulenko/behave-format/actions/workflows/docs.yml/badge.svg)](https://mathiaspaulenko.github.io/behave-format/)
+[![PyPI](https://img.shields.io/pypi/v/behave-format)](https://pypi.org/project/behave-format/)
+[![Python](https://img.shields.io/pypi/pyversions/behave-format)](https://pypi.org/project/behave-format/)
+[![License](https://img.shields.io/github/license/MathiasPaulenko/behave-format)](https://github.com/MathiasPaulenko/behave-format/blob/main/LICENSE)
+
 > The opinionated formatter for Behave `.feature` files.
 
 [Black](https://github.com/psf/black) is for Python. [gofmt](https://go.dev/blog/gofmt) is for Go. **behave-format** is for Gherkin.

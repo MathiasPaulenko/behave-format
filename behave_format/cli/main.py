@@ -2,10 +2,13 @@
 
 Usage:
     behave-format [OPTIONS] PATH...
+    behave-format --stdin < file.feature
 
 Options:
     --check          Check mode: exit 1 if formatting is needed, don't write.
     --diff           Show diffs without writing files.
+    --stdin          Read from stdin, write formatted output to stdout.
+    --indent N       Override indentation (number of spaces).
     --config PATH    Path to pyproject.toml (default: auto-discover).
     --quiet          Suppress output except errors.
     --help           Show help message.
@@ -38,7 +41,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 
-    settings = _load_settings(args.config)
+    settings = _load_settings(args.config, args.indent)
+
+    if args.stdin:
+        return _process_stdin(settings, check=args.check, quiet=args.quiet)
 
     paths = [Path(p) for p in args.paths]
     if not paths:
@@ -119,6 +125,17 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Path to pyproject.toml for configuration.",
     )
     parser.add_argument(
+        "--indent",
+        type=int,
+        default=None,
+        help="Override indentation (number of spaces).",
+    )
+    parser.add_argument(
+        "--stdin",
+        action="store_true",
+        help="Read from stdin, write formatted output to stdout.",
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Suppress output except errors.",
@@ -126,10 +143,14 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _load_settings(config_path: str | None) -> Settings:
+def _load_settings(config_path: str | None, indent_override: int | None = None) -> Settings:
     if config_path:
-        return Settings.from_pyproject(config_path)
-    return Settings.from_pyproject("pyproject.toml")
+        settings = Settings.from_pyproject(config_path)
+    else:
+        settings = Settings.from_pyproject("pyproject.toml")
+    if indent_override is not None:
+        settings = settings.with_indent(indent_override)
+    return settings
 
 
 def _process_directory(
@@ -179,6 +200,21 @@ def _process_file(
     return True
 
 
+def _process_stdin(settings: Settings, *, check: bool, quiet: bool) -> int:
+    original = sys.stdin.read()
+    formatted = _format_feature_from_text(original, settings)
+
+    if check:
+        if formatted == original:
+            return 0
+        if not quiet:
+            print("stdin would be reformatted", file=sys.stderr)
+        return 1
+
+    sys.stdout.write(formatted)
+    return 0
+
+
 def _show_diff(fpath: Path, original: str, formatted: str, *, quiet: bool) -> None:
     diff_lines = difflib.unified_diff(
         original.splitlines(keepends=True),
@@ -189,6 +225,25 @@ def _show_diff(fpath: Path, original: str, formatted: str, *, quiet: bool) -> No
     diff_text = "".join(diff_lines)
     if diff_text and not quiet:
         sys.stdout.write(diff_text)
+
+
+def _format_feature_from_text(text: str, settings: Settings) -> str:
+    """Format a feature from raw text and return the formatted output."""
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".feature", delete=False, encoding="utf-8"
+    ) as tmp:
+        tmp.write(text)
+        tmp_path = Path(tmp.name)
+
+    try:
+        feature = load_feature(tmp_path)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+    format_feature(feature, settings)
+    return print_feature(feature, indent=settings.indent) + "\n"
 
 
 if __name__ == "__main__":
