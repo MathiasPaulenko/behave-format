@@ -1,0 +1,7 @@
+- id: behave-format
+  name: behave-format
+  description: "The opinionated formatter for Behave .feature files"
+  entry: behave-format
+  language: python
+  types: [text]
+  files: \.feature$
