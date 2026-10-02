@@ -81,7 +81,7 @@ into beautifully formatted `.feature` files.
     # .pre-commit-config.yaml
     repos:
       - repo: https://github.com/MathiasPaulenko/behave-format
-        rev: v1.0.1
+        rev: v1.0.2
         hooks:
           - id: behave-format
     ```

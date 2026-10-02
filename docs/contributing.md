@@ -26,10 +26,8 @@ behave-format/
 │   ├── pipeline/           # Formatting pipeline
 │   ├── printer/            # Text generation
 │   └── cli/                # CLI
-├── tests/                  # Test suite
-│   ├── golden/             # Golden file tests
-│   ├── unit/               # Unit tests
-│   └── performance/        # Performance tests
+├── tests/                  # Test suite (test_cli, test_formatting, ...)
+│   └── golden/             # Golden input/expected .feature pairs
 ├── docs/                   # Documentation
 ├── pyproject.toml          # Project config
 └── mkdocs.yml              # Docs config
@@ -44,14 +42,11 @@ pytest tests/ -v
 # Run with coverage
 pytest tests/ --cov=behave_format --cov-report=term-missing
 
-# Run only unit tests
-pytest tests/unit/ -v
-
 # Run only golden file tests
-pytest tests/golden/ -v
+pytest tests/test_golden.py -v
 
-# Run performance tests
-pytest tests/performance/ -v
+# Run round-trip regression tests
+pytest tests/test_roundtrip.py -v
 ```
 
 ## Linting and formatting
@@ -122,7 +117,7 @@ Feature: Test
     expected = """@auth @smoke
 Feature: Test
 """
-    feature = load_feature_from_text(input_text)
+    feature = load_feature_text(input_text)
     format_feature(feature, Settings())
     result = print_feature(feature, indent=2)
     assert result == expected.strip()

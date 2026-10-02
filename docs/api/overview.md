@@ -16,6 +16,8 @@ The following functions and classes are exported from the top-level `behave_form
 | `render_project` | `function` | Format and render a `Project` as `.feature` text. |
 | `format_feature` | `function` | Format a single `Feature` in place. |
 | `render_feature` | `function` | Format and render a single `Feature` as `.feature` text. |
+| `load_feature_text` | `function` | Parse feature text, restoring comments, keywords and docstring types. |
+| `load_feature_file` | `function` | Same, from a file path. |
 
 ## Quick usage
 
@@ -46,4 +48,4 @@ def render_feature(feature: Feature, settings: Settings | None = None) -> str
 - [Settings](settings.md) — Configuration dataclass with `from_pyproject`, `from_dict`, `with_indent`
 - [Formatter](formatter.md) — Main orchestrator functions (`format_project`, `render_project`, etc.)
 - [Printers](printers.md) — Gherkin text generation (`feature_printer`, `scenario_printer`, etc.)
-- [Pipeline](pipeline.md) — Pipeline stages (`normalize`, `sort`, `align`, `rules`)
+- [Pipeline](pipeline.md) — Pipeline stages (`normalize`, `sort`, `align`)

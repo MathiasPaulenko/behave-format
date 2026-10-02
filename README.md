@@ -143,7 +143,7 @@ line_length = 120
 | `sort_tags` | `true` | Sort tags alphabetically |
 | `sort_features` | `false` | Sort features by name |
 | `sort_scenarios` | `false` | Sort scenarios by name |
-| `line_length` | `120` | Maximum line length (reference) |
+| `line_length` | `120` | Maximum line length — wraps long tag lines |
 
 ## Before / After
 
@@ -189,11 +189,11 @@ Feature: Login
 behave_format/
 ├── config/
 │   └── settings.py        # Settings dataclass + pyproject.toml loader
+├── loader.py              # Parse via behave-model + restore comments/keywords
 ├── pipeline/
 │   ├── normalize.py       # Whitespace, indentation, tag normalization
 │   ├── sort.py            # Sort tags, features, scenarios
 │   ├── align.py           # Table alignment, trailing whitespace
-│   ├── rules.py           # Formatting rules registry
 │   └── formatter.py       # Main orchestrator (format_project)
 ├── printer/
 │   ├── feature_printer.py

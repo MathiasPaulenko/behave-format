@@ -141,7 +141,7 @@ Feature: Login
 - Default: 2 spaces (configurable via `indent`)
 - Steps indented under their parent (Scenario, Background, Rule)
 - Examples tables indented under Scenario Outline
-- DocStrings preserved as-is (content not re-indented)
+- DocString content preserved; the block is re-indented to the step's level
 
 ### Indentation levels
 
@@ -157,16 +157,31 @@ Feature: Login
 
 ## Comments
 
-- Comments are preserved in the output
+- Comments are preserved in the output and attached to the element that
+  follows them (comments before `Background:`/`Examples:` are kept with the
+  next step or block)
 - Comment content is never modified
-- `# language:` directives are preserved for non-English features
+- `# language:` directives are preserved for non-English features, and the
+  original localized keywords are kept (`Característica`, `Escenario`, ...)
 - Trailing whitespace on comment lines is stripped
+- Long tag lines wrap onto continuation lines when they exceed `line_length`
 
 ## DocStrings
 
 - DocString content is preserved exactly as-is
-- Delimiters (`"""` or `'''`) are preserved
+- Content types (`"""json`, `"""text`, ...) are preserved
 - Indentation of the DocString block is normalized to the step's indentation level
+
+## Tables
+
+- Cell values containing `\|` are re-escaped on output, so formatted tables
+  always remain parseable
+- Column widths account for CJK/emoji display width
+
+## Line endings
+
+- Files are always written with LF endings, on every platform (deterministic
+  output, no CRLF on Windows)
 
 ## What the formatter does NOT change
 
@@ -176,7 +191,8 @@ Feature: Login
 
     - Feature names
     - Scenario names
-    - Step text (only surrounding whitespace normalized)
+    - Step text (whitespace between words is normalized; content inside
+      `"..."`, `'...'` and `<placeholders>` is preserved exactly)
     - DocString content
     - Table cell values (only alignment/padding changes)
     - Comment content

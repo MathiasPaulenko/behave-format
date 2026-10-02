@@ -14,7 +14,7 @@
 | `sort_tags` | `bool` | `True` | Sort tags alphabetically. |
 | `sort_features` | `bool` | `False` | Sort features by name. |
 | `sort_scenarios` | `bool` | `False` | Sort scenarios by name. |
-| `line_length` | `int` | `120` | Maximum line length for reference. |
+| `line_length` | `int` | `120` | Maximum line length — long tag lines wrap onto continuation lines. |
 
 ## Loading from `pyproject.toml`
 

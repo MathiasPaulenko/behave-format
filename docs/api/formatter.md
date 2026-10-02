@@ -47,7 +47,7 @@ print(text)
 def format_feature(feature: Feature, settings: Settings | None = None) -> Feature
 ```
 
-Formats a single `Feature` in place. Applies normalization and tag sorting. Alignment is handled at print time.
+Formats a single `Feature` in place. Applies normalization, tag sorting, and scenario sorting when enabled. Alignment is handled at print time.
 
 ### `render_feature`
 

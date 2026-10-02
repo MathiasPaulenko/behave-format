@@ -28,6 +28,15 @@ Formats a `Table` with aligned columns. Computes column widths from headers and 
 
 ## Tag Printer
 
-Formats a list of `Tag` objects as a single space-separated string with optional indentation.
+Formats a list of `Tag` objects as space-separated lines, wrapping onto
+continuation lines when `line_length` is exceeded.
 
 ::: behave_format.printer.tag_printer
+
+## Keywords
+
+Resolves the Gherkin keyword to print for each element — the original
+keyword when the element was parsed from a file, or the canonical i18n
+alias for the feature's language.
+
+::: behave_format.printer.keywords

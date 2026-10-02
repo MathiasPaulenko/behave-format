@@ -35,18 +35,19 @@ behave_format/
 ├── __main__.py              # python -m behave_format entry point
 ├── config/
 │   └── settings.py          # Settings dataclass + pyproject.toml loader
+├── loader.py                # Parse via behave-model + restore comments/keywords
 ├── pipeline/
 │   ├── normalize.py         # Whitespace, indentation, tag normalization
 │   ├── sort.py              # Sort tags, features, scenarios
 │   ├── align.py             # Table alignment, trailing whitespace
-│   ├── rules.py             # Formatting rules registry & apply_rules
 │   └── formatter.py         # Main orchestrator (format_project, render_project)
 ├── printer/
 │   ├── feature_printer.py   # Feature → .feature text
 │   ├── scenario_printer.py  # Background/Scenario/ScenarioOutline → text
 │   ├── step_printer.py      # Step with DocString & Table → text
 │   ├── table_printer.py     # Table with aligned columns → text
-│   └── tag_printer.py       # Tag list → space-separated string
+│   ├── tag_printer.py       # Tag list → space-separated string
+│   └── keywords.py          # Gherkin keyword resolution (i18n)
 └── cli/
     └── main.py              # CLI entry point (argparse)
 ```
@@ -69,8 +70,14 @@ The core formatting engine. Each stage is a standalone function that takes a
 | `normalize.py` | 1. Normalize | Clean whitespace, standardize indentation, normalize tags |
 | `sort.py` | 2. Sort | Sort tags/features/scenarios per Settings |
 | `align.py` | 3. Align | Align table columns, pad cells, remove trailing whitespace |
-| `rules.py` | — | Rule type definition and `apply_rules` runner |
 | `formatter.py` | — | Orchestrator: `format_project`, `render_project`, `format_feature`, `render_feature` |
+
+### `loader.py`
+
+Parses `.feature` text through behave-model and restores what behave's
+parser discards: comments (re-attached to the element that follows them),
+original Gherkin keywords (stored as `_gherkin_keyword`, used by printers),
+and docstring content types.
 
 ### `printer/`
 
@@ -136,13 +143,14 @@ graph TD
     style STD fill:#c8e6c9,stroke:#388e3c
 ```
 
-behave-format has exactly **one runtime dependency**: [behave-model](https://github.com/MathiasPaulenko/behave-model).
-Everything else uses the Python standard library.
+behave-format depends on [behave-model](https://github.com/MathiasPaulenko/behave-model)
+and [behave](https://github.com/behave/behave) (for the parser and `behave.i18n`
+keyword tables). Everything else uses the Python standard library.
 
 ## Design principles
 
 1. **Single responsibility** — each module does one thing
 2. **Immutability** — `Settings` is frozen, pipeline stages don't create new objects
-3. **Composition over inheritance** — rules are callables, not classes
+3. **Composition over inheritance** — pipeline stages are plain functions, not classes
 4. **Determinism** — same input always produces same output
 5. **Safety** — never change semantics, only formatting

@@ -38,8 +38,9 @@ Cleans and standardizes the model's whitespace and structure.
 **What it does:**
 
 - Strips trailing whitespace from all text fields (step text, comments, descriptions)
-- Standardizes indentation to the configured `indent` value
-- Normalizes tag names (ensures `@` prefix)
+- Normalizes whitespace between words in step names — but never inside
+  `"..."`, `'...'` or `<placeholder>` literals, which carry semantic value
+- Normalizes tag names (ensures `@` prefix) and removes duplicates
 - Strips leading/trailing whitespace from table cells
 - Removes empty lines that have only whitespace
 - Ensures `# language:` directives are preserved
@@ -160,22 +161,4 @@ text2 = render_project(project, Settings())
 assert text1 == text2  # Always passes
 ```
 
-## Rule system
 
-The pipeline uses a simple rule system. Each rule is a callable that transforms
-a `Project` with `Settings`:
-
-```python
-from behave_format.pipeline.rules import Rule, apply_rules
-
-# A rule is just a callable
-def my_rule(project, settings):
-    # Transform project...
-    return project
-
-rules: list[Rule] = [normalize_project, sort_project, align_project]
-apply_rules(project, rules, settings)
-```
-
-This makes the pipeline extensible — you can add custom rules without modifying
-the core formatter.

@@ -3,7 +3,8 @@
 ## Requirements
 
 - Python >= 3.11
-- [behave-model](https://github.com/MathiasPaulenko/behave-model) >= 0.1.0
+- [behave](https://github.com/behave/behave) >= 1.3
+- [behave-model](https://github.com/MathiasPaulenko/behave-model) >= 1.0
 
 ## From PyPI
 
@@ -40,7 +41,7 @@ Add behave-format to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/MathiasPaulenko/behave-format
-    rev: v1.0.1
+    rev: v1.0.2
     hooks:
       - id: behave-format
 ```
@@ -56,7 +57,7 @@ pre-commit run --all-files
 
 ```bash
 behave-format --version
-# behave-format 1.0.1
+# behave-format 1.0.2
 ```
 
 ```bash

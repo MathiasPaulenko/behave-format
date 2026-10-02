@@ -80,8 +80,9 @@ Sort scenarios alphabetically by name within each feature.
 | **Type** | `int` |
 | **Default** | `120` |
 
-Maximum line length for reference. Currently used as a guideline — the formatter
-does not hard-wrap long lines, but future versions may use this for smart wrapping.
+Maximum line length. Tag lines that exceed this length wrap onto continuation
+lines at the same indentation level (Gherkin allows tags split across lines).
+Step text, descriptions and tables are never wrapped.
 
 ## Configuration precedence
 
@@ -98,8 +99,9 @@ behave-format --indent 4 features/
 
 ## Custom config file
 
-By default, behave-format auto-discovers `pyproject.toml` in the current directory.
-You can specify a custom path:
+By default, behave-format auto-discovers `pyproject.toml` by walking upward
+from each target path (or the current directory for `--stdin`). You can
+specify a custom path:
 
 ```bash
 behave-format --config path/to/custom-pyproject.toml features/

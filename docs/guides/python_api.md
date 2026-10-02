@@ -163,13 +163,12 @@ from behave_format import Settings
 from behave_format.pipeline.normalize import normalize_project
 from behave_format.pipeline.sort import sort_project
 from behave_format.pipeline.align import align_project
-from behave_format.pipeline.rules import apply_rules
 
 project = load_project("features/")
 settings = Settings(indent=4)
 
 # Run only specific stages
-normalize_project(project, settings)
+normalize_project(project)
 sort_project(project, settings)
 # Skip align if you want
 ```

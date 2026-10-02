@@ -16,12 +16,6 @@ Orders tags, features, and scenarios. By default only tags are sorted alphabetic
 
 ## Align
 
-Ensures tables are rectangular (pads short rows, truncates long rows) and removes trailing whitespace. This stage operates on the model before printing.
+Ensures tables are rectangular (pads short rows, extends headers when a row has extra cells) and removes trailing whitespace. This stage operates on the model before printing and never drops cell values.
 
 ::: behave_format.pipeline.align
-
-## Rules
-
-Defines a `Rule` type (callable that transforms a `Project` with `Settings`) and an `apply_rules` function for applying a sequence of rules in order.
-
-::: behave_format.pipeline.rules

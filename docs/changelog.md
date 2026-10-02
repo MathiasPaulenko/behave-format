@@ -1,5 +1,61 @@
 # Changelog
 
+All notable changes to this project will be documented here. The format is
+based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
+project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- `load_feature_text()` and `load_feature_file()` in `behave_format.loader`:
+  parse feature text while restoring what `behave`'s parser discards —
+  comments, original Gherkin keywords, and docstring content types
+- `line_length` now wraps long tag lines onto continuation lines
+- Config auto-discovery walks upward from each target path (and from the
+  current directory for `--stdin`); `--config` still overrides
+- `--check` mode now reports each file that would be reformatted
+- `--stdin` supports `--diff`
+
+### Fixed
+
+- Table cells containing `\|` are re-escaped on output; previously the
+  formatter emitted invalid Gherkin that could not be re-parsed
+- Comments are no longer deleted from formatted files
+- Non-English features keep their original keywords (`Característica`,
+  `Escenario`, `Regla`, ...) instead of being rewritten with English
+  keywords under a `# language:` directive that made output unparseable
+- Docstring content types (`"""json`, `"""text/plain`, ...) are preserved
+- Step text whitespace is no longer collapsed inside `"..."`, `'...'`
+  and `<placeholder>` literals (changed the arguments step definitions
+  would match)
+- Feature/scenario/rule descriptions keep their interior spacing
+- Directory mode parse errors now exit with code 2 (previously swallowed)
+- Files are written with LF endings deterministically (previously followed
+  `os.linesep`, producing CRLF on Windows) and atomically
+- `format_feature` now honors `sort_scenarios` like `format_project`
+- `sort_tags = false` no longer sorts `project.global_tags` anyway
+- Ragged tables pad missing cells instead of truncating extra ones
+- Duplicate tags are removed
+- Empty lines inside docstrings no longer emit trailing whitespace
+- `--indent` rejects values below 1; invalid config values exit with
+  code 2 instead of a traceback
+- `.venv`, `node_modules` and other tooling directories are skipped when
+  formatting a directory recursively
+- Removed dead `pipeline/rules.py` rule registry
+
+### Changed
+
+- Table column widths are computed on escaped cell text and use display
+  width for CJK/emoji characters
+
+## [1.0.2] - 2026-07-29
+
+### Added
+
+- `.pre-commit-hooks.yaml` — drop-in pre-commit integration
+- Expanded documentation site (guides, API reference, examples, architecture)
+
 ## [1.0.1] - 2025-07-02
 
 ### Added

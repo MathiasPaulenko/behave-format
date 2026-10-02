@@ -111,7 +111,7 @@ Suppresses all output except errors. Useful in scripts where you only care about
 behave-format --config path/to/pyproject.toml features/
 ```
 
-Use a specific `pyproject.toml` instead of auto-discovering one in the current directory.
+Use a specific `pyproject.toml` instead of auto-discovering one by walking upward from each target path.
 
 ### Custom indentation
 
