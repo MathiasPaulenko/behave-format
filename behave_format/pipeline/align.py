@@ -73,9 +73,14 @@ def _align_table(table: Table) -> None:
 
 
 def _ensure_rectangular(table: Table) -> None:
-    num_cols = len(table.headers)
+    # Pad short rows and extend headers instead of truncating:
+    # extra cells are data and must never be dropped.
+    num_cols = max(
+        [len(table.headers)] + [len(row.cells) for row in table.rows],
+        default=0,
+    )
+    while len(table.headers) < num_cols:
+        table.headers.append("")
     for row in table.rows:
         while len(row.cells) < num_cols:
             row.cells.append("")
-        if len(row.cells) > num_cols:
-            row.cells = row.cells[:num_cols]

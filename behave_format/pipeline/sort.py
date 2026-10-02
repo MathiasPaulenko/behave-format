@@ -32,11 +32,15 @@ def sort_project(project: Project, settings: Settings) -> Project:
 
     if settings.sort_scenarios:
         for feature in project.features:
-            feature.scenarios.sort(key=lambda s: s.name)
-            for rule in feature.rules:
-                rule.scenarios.sort(key=lambda s: s.name)
+            _sort_feature_scenarios(feature)
 
     return project
+
+
+def _sort_feature_scenarios(feature: Feature) -> None:
+    feature.scenarios.sort(key=lambda s: s.name)
+    for rule in feature.rules:
+        rule.scenarios.sort(key=lambda s: s.name)
 
 
 def _sort_all_tags(project: Project) -> None:

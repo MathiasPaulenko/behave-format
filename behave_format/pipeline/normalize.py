@@ -7,6 +7,8 @@ structural consistency are normalized.
 
 from __future__ import annotations
 
+import re
+
 from behave_model.model.background import Background
 from behave_model.model.docstring import DocString
 from behave_model.model.examples import Examples
@@ -31,7 +33,6 @@ def normalize_project(project: Project) -> Project:
     """
     for feature in project.features:
         _normalize_feature(feature)
-    project.global_tags.sort(key=lambda t: t.name)
     return project
 
 
@@ -86,9 +87,32 @@ def _normalize_examples(examples: Examples) -> None:
     _normalize_table(examples.table)
 
 
+_STEP_LITERAL_RE = re.compile(r'("[^"\n]*"|\'[^\'\n]*\'|<[^>\n]*>)')
+
+
+def _collapse_unprotected(text: str) -> str:
+    words = text.split()
+    if not words:
+        return " " if text else ""
+    head = " " if text[0].isspace() else ""
+    tail = " " if text[-1].isspace() else ""
+    return head + " ".join(words) + tail
+
+
+def _collapse_whitespace(name: str) -> str:
+    """Collapse whitespace runs except inside quoted strings and <placeholders>.
+
+    Step parameters carry semantic value (a step regex may capture them),
+    so whitespace inside ``"..."``, ``'...'`` and ``<...>`` is preserved.
+    """
+    parts = _STEP_LITERAL_RE.split(name)
+    collapsed = [part if i % 2 else _collapse_unprotected(part) for i, part in enumerate(parts)]
+    return "".join(collapsed)
+
+
 def _normalize_step(step: Step) -> None:
     step.keyword = step.keyword.strip()
-    step.name = " ".join(step.name.split())
+    step.name = _collapse_whitespace(step.name)
     if step.doc_string:
         _normalize_doc_string(step.doc_string)
     if step.data_table:
@@ -110,15 +134,19 @@ def _normalize_table(table: Table) -> None:
 
 
 def _normalize_tags(tags: list[Tag]) -> None:
+    seen: set[str] = set()
+    kept: list[Tag] = []
     for tag in tags:
         tag.name = tag.name.strip()
         if not tag.name.startswith("@"):
             tag.name = "@" + tag.name
+        if tag.name not in seen:
+            seen.add(tag.name)
+            kept.append(tag)
+    tags[:] = kept
 
 
 def _normalize_description(description: str) -> str:
-    lines = description.splitlines()
-    normalized = []
-    for line in lines:
-        normalized.append(" ".join(line.split()))
-    return "\n".join(normalized)
+    # Descriptions are free text: strip edges but keep interior spacing,
+    # which may be intentional (aligned columns, ASCII diagrams).
+    return "\n".join(line.strip() for line in description.splitlines())

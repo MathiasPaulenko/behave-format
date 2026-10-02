@@ -55,11 +55,13 @@ def format_feature(feature: Feature, settings: Settings | None = None) -> Featur
         settings = Settings()
 
     from behave_format.pipeline.normalize import _normalize_feature
-    from behave_format.pipeline.sort import _sort_feature_tags
+    from behave_format.pipeline.sort import _sort_feature_scenarios, _sort_feature_tags
 
     _normalize_feature(feature)
     if settings.sort_tags:
         _sort_feature_tags(feature)
+    if settings.sort_scenarios:
+        _sort_feature_scenarios(feature)
     align_feature(feature)
     return feature
 
@@ -75,7 +77,9 @@ def render_feature(feature: Feature, settings: Settings | None = None) -> str:
         The formatted .feature file content as a string.
     """
     format_feature(feature, settings)
-    return print_feature(feature, indent=settings.indent if settings else 2) + "\n"
+    indent = settings.indent if settings else 2
+    line_length = settings.line_length if settings else None
+    return print_feature(feature, indent=indent, line_length=line_length) + "\n"
 
 
 def render_project(project: Project, settings: Settings | None = None) -> str:
@@ -92,5 +96,6 @@ def render_project(project: Project, settings: Settings | None = None) -> str:
     """
     format_project(project, settings)
     indent = settings.indent if settings else 2
-    parts = [print_feature(f, indent=indent) for f in project.features]
+    line_length = settings.line_length if settings else None
+    parts = [print_feature(f, indent=indent, line_length=line_length) for f in project.features]
     return "\n\n".join(parts) + "\n"
