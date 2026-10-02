@@ -114,12 +114,14 @@ def test_cli_idempotent_write(temp_feature_file: Path) -> None:
 
 
 def test_cli_version_flag(capsys: pytest.CaptureFixture) -> None:
+    from behave_format import __version__
+
     with pytest.raises(SystemExit) as exc_info:
         main(["--version"])
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
     assert "behave-format" in captured.out
-    assert "1.0.1" in captured.out
+    assert __version__ in captured.out
 
 
 def test_cli_nonexistent_file_returns_2(capsys: pytest.CaptureFixture) -> None:
@@ -176,3 +178,74 @@ def test_cli_stdin_check_dirty(
     monkeypatch.setattr("sys.stdin", io.StringIO(UNFORMATTED_INPUT))
     exit_code = main(["--stdin", "--check", "--quiet"])
     assert exit_code == 1
+
+
+def test_cli_stdin_passthrough_when_clean(
+    capsys: pytest.CaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import io
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(FORMATTED_OUTPUT))
+    exit_code = main(["--stdin"])
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert captured.out == FORMATTED_OUTPUT
+
+
+def test_cli_stdin_diff_mode(
+    capsys: pytest.CaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import io
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(UNFORMATTED_INPUT))
+    exit_code = main(["--stdin", "--diff"])
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "@auth @smoke" in captured.out
+
+
+def test_cli_directory_parse_error_returns_2(tmp_path: Path) -> None:
+    features_dir = tmp_path / "features"
+    features_dir.mkdir()
+    (features_dir / "bad.feature").write_text(
+        "Feature: B\n  Scenario: s\n    Given x\n      wat\n", encoding="utf-8"
+    )
+    exit_code = main([str(features_dir)])
+    assert exit_code == 2
+
+
+def test_cli_check_mode_reports_file(
+    temp_feature_file: Path, capsys: pytest.CaptureFixture
+) -> None:
+    exit_code = main(["--check", str(temp_feature_file)])
+    assert exit_code == 1
+    captured = capsys.readouterr()
+    assert "would reformat" in captured.out
+    assert str(temp_feature_file) in captured.out
+
+
+def test_cli_invalid_indent_returns_2() -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--indent", "0", "x.feature"])
+    assert exc_info.value.code == 2
+
+
+def test_cli_writes_lf_line_endings(temp_feature_file: Path) -> None:
+    exit_code = main([str(temp_feature_file)])
+    assert exit_code == 0
+    raw = temp_feature_file.read_bytes()
+    assert b"\r\n" not in raw
+    assert raw.endswith(b"\n")
+
+
+def test_cli_discovers_pyproject_upward(tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text("[tool.behave-format]\nindent = 4\n", encoding="utf-8")
+    features_dir = tmp_path / "nested" / "features"
+    features_dir.mkdir(parents=True)
+    feature_file = features_dir / "t.feature"
+    feature_file.write_text(UNFORMATTED_INPUT, encoding="utf-8")
+
+    exit_code = main([str(feature_file)])
+    assert exit_code == 0
+    content = feature_file.read_text(encoding="utf-8")
+    assert "    Scenario: Successful login" in content
