@@ -8,6 +8,8 @@ on:
       - "docs/**"
       - "mkdocs.yml"
       - "README.md"
+      # mkdocstrings renders API pages from source docstrings
+      - "behave_format/**"
   workflow_dispatch:
 
 permissions:

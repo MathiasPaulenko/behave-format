@@ -84,7 +84,7 @@ plugins:
       default_handler: python
       handlers:
         python:
-          paths: [behave_format]
+          paths: ["."]
           options:
             docstring_style: google
             show_source: true
