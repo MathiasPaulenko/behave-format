@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "behave-format"
-version = "1.0.2"
+dynamic = ["version"]
 description = "The opinionated formatter for Behave .feature files"
 readme = "README.md"
 license = "MIT"
@@ -25,7 +25,8 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-    "behave-model>=0.1.0",
+    "behave>=1.3,<2",
+    "behave-model>=1.0,<2",
 ]
 
 [project.optional-dependencies]
@@ -48,6 +49,9 @@ Homepage = "https://github.com/MathiasPaulenko/behave-format"
 Repository = "https://github.com/MathiasPaulenko/behave-format"
 Issues = "https://github.com/MathiasPaulenko/behave-format/issues"
 Changelog = "https://github.com/MathiasPaulenko/behave-format/blob/main/CHANGELOG.md"
+
+[tool.hatch.version]
+path = "behave_format/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["behave_format"]
