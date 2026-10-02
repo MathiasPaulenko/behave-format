@@ -41,7 +41,7 @@ Add behave-format to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/MathiasPaulenko/behave-format
-    rev: v1.0.2
+    rev: v1.1.0
     hooks:
       - id: behave-format
 ```
@@ -57,7 +57,7 @@ pre-commit run --all-files
 
 ```bash
 behave-format --version
-# behave-format 1.0.2
+# behave-format 1.1.0
 ```
 
 ```bash
