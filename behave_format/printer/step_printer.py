@@ -30,7 +30,9 @@ def print_step(step: Step, indent: int = 4) -> str:
         lines.append(_print_doc_string(step.doc_string, indent))
 
     if step.data_table:
-        lines.append(print_table(step.data_table, indent=indent + 2))
+        table_text = print_table(step.data_table, indent=indent + 2)
+        if table_text:
+            lines.append(table_text)
 
     return "\n".join(lines)
 
@@ -46,6 +48,8 @@ def _print_doc_string(doc_string: DocString, indent: int) -> str:
         header += content_type
     lines.append(header)
     for content_line in doc_string.lines:
-        lines.append(f"{prefix}{content_line}")
+        # Whitespace-only content lines stay empty so no trailing
+        # whitespace is emitted.
+        lines.append(f"{prefix}{content_line}" if content_line.strip() else "")
     lines.append(f"{prefix}{delimiter}")
     return "\n".join(lines)

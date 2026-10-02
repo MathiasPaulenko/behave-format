@@ -7,12 +7,14 @@ beautifully formatted output.
 Public API:
 
     from behave_format import format_project, render_project, Settings
+    from behave_format import load_feature_file, load_feature_text
     from behave_model import load_project
 
     project = load_project("features/")
     format_project(project)
-    # or render to text:
-    text = render_project(project)
+    # or parse + format a single file with comments preserved:
+    feature = load_feature_file("features/login.feature")
+    text = render_feature(feature)
 
 CLI:
 
@@ -22,6 +24,7 @@ CLI:
 """
 
 from behave_format.config.settings import Settings
+from behave_format.loader import load_feature_file, load_feature_text
 from behave_format.pipeline.formatter import (
     format_feature,
     format_project,
@@ -35,6 +38,8 @@ __all__ = [
     "Settings",
     "format_feature",
     "format_project",
+    "load_feature_file",
+    "load_feature_text",
     "render_feature",
     "render_project",
     "__version__",
