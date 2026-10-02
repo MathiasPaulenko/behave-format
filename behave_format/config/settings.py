@@ -32,6 +32,12 @@ class Settings:
     sort_scenarios: bool = False
     line_length: int = 120
 
+    def __post_init__(self) -> None:
+        if self.indent < 1:
+            raise ValueError(f"indent must be >= 1, got {self.indent}")
+        if self.line_length < 1:
+            raise ValueError(f"line_length must be >= 1, got {self.line_length}")
+
     @classmethod
     def from_pyproject(cls, path: str = "pyproject.toml") -> Settings:
         """Load settings from a ``pyproject.toml`` file.
@@ -53,13 +59,16 @@ class Settings:
             data = tomllib.load(f)
 
         section = data.get("tool", {}).get("behave-format", {})
-        return cls(
-            indent=section.get("indent", 2),
-            sort_tags=section.get("sort_tags", True),
-            sort_features=section.get("sort_features", False),
-            sort_scenarios=section.get("sort_scenarios", False),
-            line_length=section.get("line_length", 120),
-        )
+        try:
+            return cls(
+                indent=int(section.get("indent", 2)),
+                sort_tags=bool(section.get("sort_tags", True)),
+                sort_features=bool(section.get("sort_features", False)),
+                sort_scenarios=bool(section.get("sort_scenarios", False)),
+                line_length=int(section.get("line_length", 120)),
+            )
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"invalid [tool.behave-format] section: {e}") from e
 
     @classmethod
     def from_dict(cls, data: dict) -> Settings:
@@ -73,11 +82,11 @@ class Settings:
             A Settings instance.
         """
         return cls(
-            indent=data.get("indent", 2),
-            sort_tags=data.get("sort_tags", True),
-            sort_features=data.get("sort_features", False),
-            sort_scenarios=data.get("sort_scenarios", False),
-            line_length=data.get("line_length", 120),
+            indent=int(data.get("indent", 2)),
+            sort_tags=bool(data.get("sort_tags", True)),
+            sort_features=bool(data.get("sort_features", False)),
+            sort_scenarios=bool(data.get("sort_scenarios", False)),
+            line_length=int(data.get("line_length", 120)),
         )
 
     def with_indent(self, indent: int) -> Settings:
