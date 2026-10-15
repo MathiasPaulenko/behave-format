@@ -1,0 +1,39 @@
+name: behave-format
+description: >-
+  Check that Gherkin .feature files follow the opinionated Behave format.
+  Fails the job when files need formatting (black --check pattern).
+author: MathiasPaulenko
+branding:
+  icon: code
+  color: orange
+
+inputs:
+  path:
+    description: Path to check
+    required: false
+    default: features/
+  mode:
+    description: "check (fail if unformatted), diff (show changes), or format (rewrite files)"
+    required: false
+    default: check
+  args:
+    description: Extra args appended to behave-format
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Install behave-format
+      shell: bash
+      run: pip install behave-format
+
+    - name: Run behave-format
+      shell: bash
+      run: |
+        case "${{ inputs.mode }}" in
+          check)  behave-format --check "${{ inputs.path }}" ${{ inputs.args }} ;;
+          diff)   behave-format --diff "${{ inputs.path }}" ${{ inputs.args }} ;;
+          format) behave-format "${{ inputs.path }}" ${{ inputs.args }} ;;
+          *) echo "Unknown mode: ${{ inputs.mode }}"; exit 1 ;;
+        esac
