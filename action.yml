@@ -1,7 +1,5 @@
 name: behave-format
-description: >-
-  Check that Gherkin .feature files follow the opinionated Behave format.
-  Fails the job when files need formatting (black --check pattern).
+description: Check .feature files follow the opinionated Behave format — black-style --check for CI.
 author: MathiasPaulenko
 branding:
   icon: code
