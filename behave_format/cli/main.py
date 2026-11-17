@@ -248,9 +248,12 @@ def _process_file(
     diff: bool,
     quiet: bool,
 ) -> bool:
-    # Resolve symlinks so os.replace writes the real file instead of
-    # silently replacing the link with a regular file.
-    fpath = fpath.resolve()
+    # Resolve only real symlinks so os.replace writes the real file
+    # instead of silently replacing the link itself. Unconditional
+    # resolve would also rewrite 8.3 short names on Windows, making the
+    # reported path differ from the one the user passed.
+    if fpath.is_symlink():
+        fpath = fpath.resolve()
     # Read without newline translation so CRLF files compare unequal and
     # get normalized to LF on write.
     with fpath.open("r", encoding="utf-8", newline="") as fh:
