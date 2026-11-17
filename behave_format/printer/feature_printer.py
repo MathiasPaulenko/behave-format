@@ -53,7 +53,9 @@ def print_feature(
         for desc_line in feature.description.splitlines():
             lines.append(f"{' ' * indent}{desc_line}" if desc_line else "")
 
-    if feature.background:
+    # ``is not None``: an empty Background is falsy (``__len__``) but
+    # must still be emitted.
+    if feature.background is not None:
         lines.append("")
         lines.append(print_background(feature.background, indent=indent, language=language))
 
@@ -68,6 +70,9 @@ def print_feature(
     for rule in feature.rules:
         lines.append("")
         lines.append(_print_rule(rule, indent=indent, language=language, line_length=line_length))
+
+    for comment in getattr(feature, "_trailing_comments", ()):
+        lines.append(comment.text)
 
     return "\n".join(lines)
 
@@ -99,7 +104,7 @@ def _print_rule(rule: Rule, indent: int = 2, *, language: str = "en", line_lengt
             lines.append(f"{prefix}  {desc_line}" if desc_line else "")
 
     children: list[str] = []
-    if rule.background:
+    if rule.background is not None and not _is_phantom_background(rule):
         children.append(print_background(rule.background, indent=indent + 2, language=language))
     for scenario in rule.scenarios:
         children.append(
@@ -111,3 +116,21 @@ def _print_rule(rule: Rule, indent: int = 2, *, language: str = "en", line_lengt
         lines.append("\n\n".join(children))
 
     return "\n".join(lines)
+
+
+def _is_phantom_background(rule: Rule) -> bool:
+    """Detect behave's injected default background.
+
+    When a Rule has no ``Background:`` statement, behave still creates an
+    empty Background located at the Rule's own line (for runtime
+    inheritance). It carries no content and must not be printed.
+    """
+    bg = rule.background
+    return (
+        bg is not None
+        and not bg.steps
+        and not bg.name
+        and not getattr(bg, "comments", None)
+        and not getattr(bg, "_description", None)
+        and bg.location.line == rule.location.line
+    )

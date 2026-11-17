@@ -37,10 +37,11 @@ def normalize_project(project: Project) -> Project:
 
 
 def _normalize_feature(feature: Feature) -> None:
-    feature.name = " ".join(feature.name.split())
+    feature.name = _collapse_name(feature.name)
     feature.description = _normalize_description(feature.description)
     _normalize_tags(feature.tags)
-    if feature.background:
+    # Model objects are falsy when empty (``__len__``); compare with None.
+    if feature.background is not None:
         _normalize_background(feature.background)
     for scenario in feature.scenarios:
         _normalize_scenario(scenario)
@@ -48,13 +49,14 @@ def _normalize_feature(feature: Feature) -> None:
         _normalize_rule(rule)
     for comment in feature.comments:
         comment.text = comment.text.rstrip()
+    _rstrip_comments(feature, "_trailing_comments")
 
 
 def _normalize_rule(rule: Rule) -> None:
-    rule.name = " ".join(rule.name.split())
+    rule.name = _collapse_name(rule.name)
     rule.description = _normalize_description(rule.description)
     _normalize_tags(rule.tags)
-    if rule.background:
+    if rule.background is not None:
         _normalize_background(rule.background)
     for scenario in rule.scenarios:
         _normalize_scenario(scenario)
@@ -63,13 +65,17 @@ def _normalize_rule(rule: Rule) -> None:
 
 
 def _normalize_background(background: Background) -> None:
-    background.name = " ".join(background.name.split())
+    background.name = _collapse_name(background.name)
+    description = getattr(background, "_description", None)
+    if description is not None:
+        background._description = _normalize_description(description)
     for step in background.steps:
         _normalize_step(step)
+    _rstrip_comments(background, "comments")
 
 
 def _normalize_scenario(scenario: Scenario | ScenarioOutline) -> None:
-    scenario.name = " ".join(scenario.name.split())
+    scenario.name = _collapse_name(scenario.name)
     scenario.description = _normalize_description(scenario.description)
     _normalize_tags(scenario.tags)
     for step in scenario.steps:
@@ -82,20 +88,40 @@ def _normalize_scenario(scenario: Scenario | ScenarioOutline) -> None:
 
 
 def _normalize_examples(examples: Examples) -> None:
-    examples.name = " ".join(examples.name.split())
+    examples.name = _collapse_name(examples.name)
     _normalize_tags(examples.tags)
     _normalize_table(examples.table)
+    _rstrip_comments(examples, "comments")
+    _rstrip_comments(examples, "_trailing_comments")
 
 
-_STEP_LITERAL_RE = re.compile(r'("[^"\n]*"|\'[^\'\n]*\'|<[^>\n]*>)')
+def _rstrip_comments(element, attr: str) -> None:
+    for comment in getattr(element, attr, ()):
+        comment.text = comment.text.rstrip()
+
+
+# Whitespace runs that collapse to a single space. Space-like Unicode
+# characters (NBSP, ideographic space, ...) are excluded: inside step
+# names they are semantic (a step regex may match them literally), so
+# they must survive normalization.
+_COLLAPSIBLE_WS_RE = re.compile(r"[^\S\xa0\u1680\u2000-\u200a\u202f\u205f\u3000]+")
+
+# Quoted strings and <placeholders> inside step names keep their interior
+# whitespace. A backslash escape prevents the quote from ending the literal.
+_STEP_LITERAL_RE = re.compile(r'("(?:[^"\\\n]|\\.)*"|\'(?:[^\'\\\n]|\\.)*\'|<[^>\n]*>)')
+
+
+def _collapse_name(name: str) -> str:
+    """Collapse whitespace runs in an element name to single spaces."""
+    return _COLLAPSIBLE_WS_RE.sub(" ", name).strip(" ")
 
 
 def _collapse_unprotected(text: str) -> str:
-    words = text.split()
+    words = [word for word in _COLLAPSIBLE_WS_RE.split(text) if word]
     if not words:
         return " " if text else ""
-    head = " " if text[0].isspace() else ""
-    tail = " " if text[-1].isspace() else ""
+    head = " " if _COLLAPSIBLE_WS_RE.match(text) else ""
+    tail = " " if _COLLAPSIBLE_WS_RE.match(text[-1]) else ""
     return head + " ".join(words) + tail
 
 
@@ -113,17 +139,25 @@ def _collapse_whitespace(name: str) -> str:
 def _normalize_step(step: Step) -> None:
     step.keyword = step.keyword.strip()
     step.name = _collapse_whitespace(step.name)
-    if step.doc_string:
+    if step.doc_string is not None:
         _normalize_doc_string(step.doc_string)
-    if step.data_table:
+    if step.data_table is not None:
         _normalize_table(step.data_table)
     for comment in step.comments:
         comment.text = comment.text.rstrip()
+    _rstrip_comments(step, "_trailing_comments")
 
 
 def _normalize_doc_string(doc_string: DocString) -> None:
     doc_string.content_type = doc_string.content_type.strip()
+    # Trailing whitespace inside docstring content is invisible and
+    # would violate the formatter's no-trailing-whitespace invariant.
+    doc_string.content = "\n".join(line.rstrip() for line in doc_string.content.splitlines())
     delimiter = doc_string.delimiter or '"""'
+    # A content line starting with the delimiter would close the docstring
+    # early on re-parse; switch to the other delimiter to stay lossless.
+    if any(line.strip().startswith(delimiter) for line in doc_string.content.splitlines()):
+        delimiter = "'''" if delimiter == '"""' else '"""'
     doc_string.delimiter = delimiter
 
 

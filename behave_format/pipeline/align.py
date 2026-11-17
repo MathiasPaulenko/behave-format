@@ -42,7 +42,8 @@ def align_feature(feature: Feature) -> Feature:
 
 
 def _align_feature(feature: Feature) -> None:
-    if feature.background:
+    # ``is not None``: an empty Background is falsy (``__len__``).
+    if feature.background is not None:
         for step in feature.background.steps:
             _align_step(step)
     for scenario in feature.scenarios:
@@ -52,7 +53,7 @@ def _align_feature(feature: Feature) -> None:
             for ex in scenario.examples:
                 _align_table(ex.table)
     for rule in feature.rules:
-        if rule.background:
+        if rule.background is not None:
             for step in rule.background.steps:
                 _align_step(step)
         for scenario in rule.scenarios:
@@ -64,7 +65,7 @@ def _align_feature(feature: Feature) -> None:
 
 
 def _align_step(step: Step) -> None:
-    if step.data_table:
+    if step.data_table is not None:
         _align_table(step.data_table)
 
 

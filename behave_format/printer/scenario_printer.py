@@ -34,7 +34,14 @@ def print_background(
     header = f"{keyword}:"
     if background.name:
         header = f"{keyword}: {background.name}"
-    lines: list[str] = [f"{prefix}{header}"]
+    lines: list[str] = []
+    # The domain Background has no comments/description fields; the loader
+    # stores them on the instance (``comments``, ``_description``).
+    for comment in getattr(background, "comments", ()):
+        lines.append(f"{prefix}{comment.text}")
+    lines.append(f"{prefix}{header}")
+    description = getattr(background, "_description", "")
+    _append_description(lines, description, indent + 2)
     for step in background.steps:
         lines.append(print_step(step, indent=indent + 2))
     return "\n".join(lines)
@@ -140,6 +147,11 @@ def _print_examples(
     prefix = " " * indent
     lines: list[str] = []
 
+    # The domain Examples has no comments field; the loader stores it on
+    # the instance when the source has comments around the block.
+    for comment in getattr(examples, "comments", ()):
+        lines.append(f"{prefix}{comment.text}")
+
     if examples.tags:
         lines.append(print_tags(examples.tags, indent=indent, line_length=line_length))
 
@@ -152,5 +164,8 @@ def _print_examples(
     table_text = print_table(examples.table, indent=indent + 2)
     if table_text:
         lines.append(table_text)
+
+    for comment in getattr(examples, "_trailing_comments", ()):
+        lines.append(f"{prefix}{comment.text}")
 
     return "\n".join(lines)

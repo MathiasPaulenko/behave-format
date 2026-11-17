@@ -26,13 +26,18 @@ def print_step(step: Step, indent: int = 4) -> str:
 
     lines.append(f"{prefix}{step.keyword} {step.name}".rstrip())
 
-    if step.doc_string:
+    # ``is not None``: a headers-only Table is falsy (``__len__``) but
+    # must still be emitted.
+    if step.doc_string is not None:
         lines.append(_print_doc_string(step.doc_string, indent))
 
-    if step.data_table:
+    if step.data_table is not None:
         table_text = print_table(step.data_table, indent=indent + 2)
         if table_text:
             lines.append(table_text)
+
+    for comment in getattr(step, "_trailing_comments", ()):
+        lines.append(f"{prefix}{comment.text}")
 
     return "\n".join(lines)
 

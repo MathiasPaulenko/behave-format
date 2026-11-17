@@ -17,8 +17,10 @@ Options:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import difflib
 import os
+import stat
 import sys
 import tempfile
 from pathlib import Path
@@ -83,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     files, had_errors = _collect_files(paths)
+    files = list(dict.fromkeys(files))
 
     needs_formatting = False
     for fpath in files:
@@ -93,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
             if _process_file(fpath, settings, check=args.check, diff=args.diff, quiet=args.quiet):
                 needs_formatting = True
         except Exception as e:
-            print(f"Error: {fpath}: {e}", file=sys.stderr)
+            _print_error(f"Error: {fpath}: {e}")
             had_errors = True
 
     if had_errors:
@@ -101,14 +104,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.check and needs_formatting:
         if not args.quiet:
-            print("Files would be reformatted")
+            _write_stdout("Files would be reformatted\n")
         return 1
 
     if not args.quiet and not args.check and not args.diff:
         if needs_formatting:
-            print("Formatted files")
+            _write_stdout("Formatted files\n")
         else:
-            print("No changes needed")
+            _write_stdout("No changes needed\n")
 
     return 0
 
@@ -168,17 +171,20 @@ def _collect_files(paths: list[Path]) -> tuple[list[Path], bool]:
     had_errors = False
     for path in paths:
         if path.is_dir():
-            files.extend(f for f in sorted(path.rglob("*.feature")) if not _is_ignored(f, path))
-        elif path.is_file() and path.suffix == ".feature":
+            try:
+                candidates = sorted(path.rglob("*.feature"))
+            except OSError as e:
+                _print_error(f"Error: {path}: {e}")
+                had_errors = True
+                continue
+            files.extend(f for f in candidates if not _is_ignored(f, path))
+        elif path.is_file() and path.suffix.lower() == ".feature":
             files.append(path)
         elif not path.exists():
-            print(f"Error: {path}: file not found", file=sys.stderr)
+            _print_error(f"Error: {path}: file not found")
             had_errors = True
         else:
-            print(
-                f"Warning: skipping {path} (not a .feature file or directory)",
-                file=sys.stderr,
-            )
+            _print_error(f"Warning: skipping {path} (not a .feature file or directory)")
     return files, had_errors
 
 
@@ -213,16 +219,20 @@ def _resolve_settings(
     """Load settings once per config source, with error reporting."""
     key = ("explicit", config_path) if config_path else ("discover", start)
     if key not in cache:
-        try:
-            if config_path:
-                settings = Settings.from_pyproject(config_path)
-            else:
-                found = _discover_pyproject(start)
-                settings = Settings.from_pyproject(str(found)) if found else Settings()
-        except (OSError, ValueError) as e:
-            source = config_path or "pyproject.toml"
-            print(f"Error: invalid configuration in {source}: {e}", file=sys.stderr)
+        if config_path and not Path(config_path).is_file():
+            _print_error(f"Error: config file not found: {config_path}")
             settings = None
+        else:
+            try:
+                if config_path:
+                    settings = Settings.from_pyproject(config_path)
+                else:
+                    found = _discover_pyproject(start)
+                    settings = Settings.from_pyproject(str(found)) if found else Settings()
+            except (OSError, ValueError) as e:
+                source = config_path or "pyproject.toml"
+                _print_error(f"Error: invalid configuration in {source}: {e}")
+                settings = None
         cache[key] = settings
     settings = cache[key]
     if settings is not None and indent_override is not None:
@@ -238,6 +248,9 @@ def _process_file(
     diff: bool,
     quiet: bool,
 ) -> bool:
+    # Resolve symlinks so os.replace writes the real file instead of
+    # silently replacing the link with a regular file.
+    fpath = fpath.resolve()
     # Read without newline translation so CRLF files compare unequal and
     # get normalized to LF on write.
     with fpath.open("r", encoding="utf-8", newline="") as fh:
@@ -252,7 +265,7 @@ def _process_file(
         return False
 
     if check and not quiet:
-        print(f"would reformat {fpath}")
+        _write_stdout(f"would reformat {fpath}\n")
 
     if diff:
         _show_diff(fpath, original, formatted, quiet=quiet)
@@ -260,7 +273,7 @@ def _process_file(
     if not check and not diff:
         _write_atomic(fpath, formatted)
         if not quiet:
-            print(f"reformatted {fpath}")
+            _write_stdout(f"reformatted {fpath}\n")
 
     return True
 
@@ -270,18 +283,61 @@ def _write_atomic(fpath: Path, content: str) -> None:
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as tmp:
             tmp.write(content)
+            tmp.flush()
+            os.fsync(tmp.fileno())
+        # mkstemp creates the file 0600; keep the original permissions.
+        with contextlib.suppress(OSError):
+            os.chmod(tmp_name, stat.S_IMODE(fpath.stat().st_mode))
         os.replace(tmp_name, fpath)
     except BaseException:
         Path(tmp_name).unlink(missing_ok=True)
         raise
 
 
+def _read_stdin() -> str:
+    """Read all of stdin as UTF-8, regardless of the console encoding."""
+    buffer = getattr(sys.stdin, "buffer", None)
+    if buffer is not None:
+        return buffer.read().decode("utf-8")
+    return sys.stdin.read()
+
+
+def _write_stdout(text: str) -> None:
+    """Write to stdout as UTF-8, regardless of the console encoding."""
+    buffer = getattr(sys.stdout, "buffer", None)
+    try:
+        if buffer is not None:
+            sys.stdout.flush()
+            buffer.write(text.encode("utf-8"))
+            buffer.flush()
+        else:
+            sys.stdout.write(text)
+    except BrokenPipeError:
+        # The downstream consumer is gone (e.g. ``| head``). Exit
+        # without the interpreter's shutdown flush raising it again.
+        os._exit(1)
+
+
+def _print_error(message: str) -> None:
+    """Write an error line to stderr as UTF-8 (survives unicode paths)."""
+    buffer = getattr(sys.stderr, "buffer", None)
+    if buffer is not None:
+        buffer.write((message + "\n").encode("utf-8", errors="replace"))
+        buffer.flush()
+    else:
+        print(message, file=sys.stderr)
+
+
 def _process_stdin(settings: Settings, *, check: bool, diff: bool, quiet: bool) -> int:
-    original = sys.stdin.read()
+    try:
+        original = _read_stdin()
+    except (OSError, UnicodeDecodeError) as e:
+        _print_error(f"Error: <stdin>: {e}")
+        return 2
     try:
         feature = load_feature_text(original, filename="<stdin>")
     except Exception as e:
-        print(f"Error: <stdin>: {e}", file=sys.stderr)
+        _print_error(f"Error: <stdin>: {e}")
         return 2
     format_feature(feature, settings)
     formatted = print_feature(feature, indent=settings.indent, line_length=settings.line_length)
@@ -294,13 +350,13 @@ def _process_stdin(settings: Settings, *, check: bool, diff: bool, quiet: bool) 
         if formatted == original:
             return 0
         if not quiet:
-            print("stdin would be reformatted", file=sys.stderr)
+            _print_error("stdin would be reformatted")
         return 1
 
     if diff:
         return 0
 
-    sys.stdout.write(formatted)
+    _write_stdout(formatted)
     return 0
 
 
@@ -313,7 +369,7 @@ def _show_diff(fpath: Path, original: str, formatted: str, *, quiet: bool) -> No
     )
     diff_text = "".join(diff_lines)
     if diff_text and not quiet:
-        sys.stdout.write(diff_text)
+        _write_stdout(diff_text)
 
 
 if __name__ == "__main__":

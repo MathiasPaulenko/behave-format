@@ -129,11 +129,11 @@ assert settings.indent == 4
 
 ```python
 settings = Settings()
-print(settings.indent)          # 2
-print(settings.sort_tags)       # True
-print(settings.sort_features)   # False
+print(settings.indent)  # 2
+print(settings.sort_tags)  # True
+print(settings.sort_features)  # False
 print(settings.sort_scenarios)  # False
-print(settings.line_length)     # 120
+print(settings.line_length)  # 120
 ```
 
 ## Advanced usage

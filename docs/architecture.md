@@ -75,9 +75,13 @@ The core formatting engine. Each stage is a standalone function that takes a
 ### `loader.py`
 
 Parses `.feature` text through behave-model and restores what behave's
-parser discards: comments (re-attached to the element that follows them),
-original Gherkin keywords (stored as `_gherkin_keyword`, used by printers),
-and docstring content types.
+parser discards: comments (re-attached to the element that follows them,
+or to the element that owns them when they sit inside a docstring/table
+block — `_trailing_comments`), original Gherkin keywords (stored as
+`_gherkin_keyword`, used by printers), background descriptions
+(`_description`), docstring content types and delimiters (`"""` / `'''`),
+inline comments on tag lines, and empty docstrings. A UTF-8 BOM is
+accepted and normalized away.
 
 ### `printer/`
 

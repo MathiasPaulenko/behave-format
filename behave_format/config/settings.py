@@ -6,12 +6,23 @@ or constructed programmatically.
 
 from __future__ import annotations
 
+import tomllib
 from dataclasses import dataclass, replace
 
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib  # type: ignore[no-redef]
+
+def _require_bool(key: str, value: object) -> bool:
+    # TOML has native booleans; a string like "false" would otherwise
+    # coerce to True and silently invert the user's intent.
+    if isinstance(value, bool):
+        return value
+    raise ValueError(f"{key} must be a boolean, got {value!r}")
+
+
+def _coerce_int(key: str, value: object) -> int:
+    # bool is an int subclass; ``indent = true`` must not become 1.
+    if isinstance(value, bool):
+        raise ValueError(f"{key} must be an integer, got {value!r}")
+    return int(value)  # type: ignore[arg-type]
 
 
 @dataclass(frozen=True)
@@ -58,14 +69,21 @@ class Settings:
         with p.open("rb") as f:
             data = tomllib.load(f)
 
-        section = data.get("tool", {}).get("behave-format", {})
+        tool = data.get("tool")
+        section = tool.get("behave-format") if isinstance(tool, dict) else None
+        if section is None:
+            return cls()
+        if not isinstance(section, dict):
+            raise ValueError("[tool.behave-format] must be a table")
         try:
             return cls(
-                indent=int(section.get("indent", 2)),
-                sort_tags=bool(section.get("sort_tags", True)),
-                sort_features=bool(section.get("sort_features", False)),
-                sort_scenarios=bool(section.get("sort_scenarios", False)),
-                line_length=int(section.get("line_length", 120)),
+                indent=_coerce_int("indent", section.get("indent", 2)),
+                sort_tags=_require_bool("sort_tags", section.get("sort_tags", True)),
+                sort_features=_require_bool("sort_features", section.get("sort_features", False)),
+                sort_scenarios=_require_bool(
+                    "sort_scenarios", section.get("sort_scenarios", False)
+                ),
+                line_length=_coerce_int("line_length", section.get("line_length", 120)),
             )
         except (TypeError, ValueError) as e:
             raise ValueError(f"invalid [tool.behave-format] section: {e}") from e
@@ -80,7 +98,12 @@ class Settings:
 
         Returns:
             A Settings instance.
+
+        Raises:
+            TypeError: If ``data`` is not a dictionary.
         """
+        if not isinstance(data, dict):
+            raise TypeError(f"from_dict expects a dict, got {type(data).__name__}")
         return cls(
             indent=int(data.get("indent", 2)),
             sort_tags=bool(data.get("sort_tags", True)),
