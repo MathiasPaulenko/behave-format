@@ -5,7 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.2] - 2026-11-17
+
+### Fixed
+
+- Comments at end of file now stay at the end instead of moving before
+  the last element
+- Comments before `Background:` and `Examples:` blocks keep their
+  position instead of being pulled inside the block
+- Comments inside step tables and Examples tables are emitted after the
+  table instead of drifting to the following element
+- Inline comments on tag lines (`@tag # note`) are preserved as comments
+- `'''` docstrings keep their delimiter and content type; `#` lines
+  inside them are no longer duplicated as comments
+- Empty docstrings (`"""\n"""`) are no longer dropped
+- Docstring-like `"""`/`'''` text inside descriptions no longer
+  desynchronizes comment restoration
+- `Background:` descriptions and empty `Background:` blocks are preserved
+- Headers-only step tables are no longer dropped (falsy `Table.__len__`)
+- behave's phantom default Rule background is no longer printed as an
+  empty `Background:`
+- Non-breaking and other Unicode spaces inside step/element names are
+  preserved instead of collapsing to ASCII spaces
+- Escaped quotes inside step literals keep their interior whitespace
+- UTF-8 BOM input parses and is normalized away
+- `render_feature`/`render_project` with `settings=None` now produce the
+  same output as the default `Settings()`
+- `Settings.from_pyproject` no longer crashes on non-table
+  `[tool.behave-format]` sections; `from_dict` validates its input
+- `--config` with a missing file now exits with code 2 instead of
+  silently using defaults
+- Empty or feature-less `.feature` files report a clear
+  "no feature found" error instead of an `AttributeError`
+- stdin/stdout/stderr I/O is UTF-8 regardless of the console encoding
+- Atomic writes fsync before replace and preserve file permissions
+- Directory scans that hit `OSError` (e.g. permissions) report an error
+  instead of crashing
+- `Examples:` headers without a table no longer crash the loader
+- Formatting a symlinked file now writes the real file instead of
+  replacing the link itself
+- Non-boolean `sort_*`/`line_length` values and boolean `indent` in
+  `pyproject.toml` are rejected instead of silently coerced
+- A broken stdout pipe (`| head`) exits cleanly without a traceback
 
 ## [1.2.1] - 2026-10-16
 
